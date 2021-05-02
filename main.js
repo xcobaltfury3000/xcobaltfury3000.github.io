@@ -33,29 +33,40 @@ Particle.prototype.draw = function(){
     ctx.fillstyle
 }
 
-$('a[href*="#"]')
-  .not('[href="#"]')
-  .not('[href="#0"]')
-  // Remove links that don't actually link to anything
-  .click(function(event) {
-    if (
-      location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') 
-      && 
-      location.hostname == this.hostname
-    ) {
-      // Figure out element to scroll to
-      var target = $(this.hash);
-      target = target.length ? target : $('[name=' + this.hash.slice(1) + ']');
-      // Does a scroll target exist?
-      if (target.length) {
-        // Only prevent default if animation is actually gonna happen
-        event.preventDefault();
+let pos = document.querySelector(element).offsetTop;
+if ('scrollBehavior' in document.documentElement.style) { //Checks if browser supports scroll function
+    window.scroll({
+        top : pos,
+        left : 0,
+        behavior : 'smooth'
+    });
+} else {
+    smoothScrollTo(0, pos, 500); //polyfill below
+}
 
-        var scrollTop = target.offset().top - $('.sticky-top').height();
 
-        $('html, body').animate({
-          scrollTop: scrollTop
-        }, 1000)
-      }
-    }
-});
+
+
+window.smoothScrollTo = function(endX, endY, duration) {
+        let startX = window.scrollX || window.pageXOffset,
+        startY = window.scrollY || window.pageYOffset,
+        distanceX = endX - startX,
+        distanceY = endY - startY,
+        startTime = new Date().getTime();
+
+        // Easing function
+        let easeInOutQuart = function(time, from, distance, duration) {
+            if ((time /= duration / 2) < 1) return distance / 2 * time * time * time * time + from;
+            return -distance / 2 * ((time -= 2) * time * time * time - 2) + from;
+        };
+
+        let timer = window.setInterval(function() {
+            let time = new Date().getTime() - startTime,
+            newX = easeInOutQuart(time, startX, distanceX, duration),
+            newY = easeInOutQuart(time, startY, distanceY, duration);
+            if (time >= duration) {
+                window.clearInterval(timer);
+            }
+            window.scrollTo(newX, newY);
+        }, 1000 / 60); // 60 fps
+    };
